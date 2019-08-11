@@ -16,7 +16,7 @@ are provided: 0 = not defined / transient, 1 = baseline, 2 = stress,
 with open('/Users/david/Desktop/WESAD/S2/S2.pkl', 'rb') as f:
     # use latin1 to handle this python2 pickle object in python3
     data = pickle.load(f, encoding='latin1')
-print(data)
+# print(data)
 
 
 # get the order and times of self-reporting
@@ -84,3 +84,7 @@ sssq = sssq.rename(columns={
 )
 # drop unused columns
 sssq.drop(range(7, 27), axis=1, inplace=True)
+
+
+# TODO combine these with questHead order and time metrics
+# TODO create person class
