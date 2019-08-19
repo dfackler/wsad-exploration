@@ -1,6 +1,10 @@
 # person.py
 import pandas as pd
 import os
+import ast
+import math
+
+base_dir = '/Users/david/Desktop/WESAD'
 
 
 def getTiming(base_dir, num):
@@ -8,6 +12,7 @@ def getTiming(base_dir, num):
     and num is an integer referring to a valid subject number contained within 
     the study.
     Will gather the order of studies and timings in minutes. """
+    # TODO: strip leading hash mark
     timing = pd.read_csv(
         os.path.join(base_dir, ('S'+str(num)), ('S'+str(num)+'_quest.csv')),
         sep=";", skiprows=1, nrows=2)
@@ -106,6 +111,80 @@ def getSSSQ(base_dir, num):
     return sssq
 
 
+def addEvent(timing_df, metric_df):
+    """ Will combine the descriptors from timing to metric dataframe """
+    metric_df.insert(1, "event", list(timing_df.columns)[1:])
+    return metric_df
+
+
+def getRawRespi(base_dir, num):
+    """ Will read in the raw respiban data.
+    Caution: This data contains up to 5 million rows and 10 columns. """
+    raw_respi = pd.read_csv(
+        os.path.join(base_dir, ('S'+str(num)), ('S'+str(num)+'_respiban.txt')),
+        sep="\t", skiprows=3, header=None)
+    # drop unused columns
+    raw_respi.drop(1, axis=1, inplace=True)  # from README
+    raw_respi.dropna(axis='columns', inplace=True)  # trailing tab
+
+    # parse second line of file containing column labels
+    with open(os.path.join(base_dir, ('S'+str(num)),
+                           ('S'+str(num)+'_respiban.txt'))) as fp:
+        for i, line in enumerate(fp):
+            if i == 1:
+                header = line
+    sensor_start = header.find("sensor")
+    col_start = header.find("[", sensor_start)
+    col_end = header.find("]", 26) + 1
+    cols = ast.literal_eval(header[col_start:col_end])
+    # handle accelerometer columns
+    xyz_cols_changed = 0
+    while xyz_cols_changed < 3:
+        # assumes accelerometer columns in order of X, Y, Z coordinates
+        acc_ind = cols.index("XYZ")
+        xyz_col_names = {
+            0: "ACC_X",
+            1: "ACC_Y",
+            2: "ACC_Z"
+        }
+        cols[acc_ind] = xyz_col_names[xyz_cols_changed]
+        xyz_cols_changed += 1
+    cols.insert(0, "nSeq")
+    raw_respi.columns = cols
+
+    return raw_respi
+
+
+def convertRespi(respi):
+    """ this takes a raw respiban data frame and converts the metrics
+    using the calculations described in the README """
+    vcc = 3
+    chan_bit = 2 ** 16
+    cmin = 28000
+    cmax = 38000
+
+    respi['ECG'] = respi['ECG'].apply(lambda x: ((x/chan_bit-0.5)*vcc))
+    respi['EDA'] = respi['EDA'].apply(lambda x: (((x/chan_bit)*vcc)/0.12))
+    respi['EMG'] = respi['EMG'].apply(lambda x: ((x/chan_bit-0.5)*vcc))
+    # temp calculation more involved
+    # NOTE: Why do they subtract this 1.0? In the reference doc they do not
+    respi['vout'] = respi['TEMP'].apply(lambda x: (x*vcc)/(chan_bit-1.0))
+    respi['rntc'] = respi['vout'].apply(lambda x: ((10 ** 4)*x)/(vcc-x))
+    respi['TEMP'] = respi['rntc'].apply(
+        lambda x: - 273.15 + 1./(1.12764514*(10 ** (-3)) +
+                                 2.34282709*(10 ** (-4))*math.log(x) +
+                                 8.77303013*(10 ** (-8))*(math.log(x) ** 3)))
+    respi.drop('vout', axis='columns', inplace=True)
+    respi.drop('rntc', axis='columns', inplace=True)
+    respi['ACC_X'] = respi['ACC_X'].apply(lambda x: (x-cmin)/(cmax-cmin)*2-1)
+    respi['ACC_Y'] = respi['ACC_Y'].apply(lambda x: (x-cmin)/(cmax-cmin)*2-1)
+    respi['ACC_Z'] = respi['ACC_Z'].apply(lambda x: (x-cmin)/(cmax-cmin)*2-1)
+    respi['RESPIRATION'] = respi['RESPIRATION'].apply(
+        lambda x: (x/chan_bit-0.5)*100)
+
+    return(respi)
+
+
 class Person(object):
     """ Class for holding data on a person in the study
     Assumes all files exist in correct format for subject num """
@@ -114,7 +193,26 @@ class Person(object):
         self.num = num
         # read in the readme and parse to get demographics
         self.timing = getTiming(base_dir, num)
-        self.panas = getPANAS(base_dir, num)
-        self.stai = getSTAI(base_dir, num)
-        self.sam = getSAM(base_dir, num)
+        self.panas = addEvent(self.timing, getPANAS(base_dir, num))
+        self.stai = addEvent(self.timing, getSTAI(base_dir, num))
+        self.sam = addEvent(self.timing, getSAM(base_dir, num))
         self.sssq = getSSSQ(base_dir, num)
+        self.respi = convertRespi(getRawRespi(base_dir, num))
+
+    def getTiming(self):
+        return self.timing
+
+    def getPANAS(self):
+        return self.panas
+
+    def getSTAI(self):
+        return self.stai
+
+    def getSAM(self):
+        return self.sam
+
+    def getSSSQ(self):
+        return self.sssq
+
+    def getRespi(self):
+        return self.respi
