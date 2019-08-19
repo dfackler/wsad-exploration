@@ -40,9 +40,9 @@ class Person(object):
         return timing
 
     def _getPANAS(self):
-        """ Assumes base_dir is string containing directory with all subject files
-        and num is an integer referring to a valid subject number contained within
-        the study.
+        """ Assumes base_dir is string containing directory with all subject
+        files and num is an integer referring to a valid subject number
+        contained within the study.
         Will gather the PANAS survey data.
         1 = Not at all, 2 = A little bit, 3 = Somewhat, 4 = Very much,
         5 = Extremely
@@ -64,9 +64,9 @@ class Person(object):
         return panas
 
     def _getSTAI(self):
-        """ Assumes base_dir is string containing directory with all subject files
-        and num is an integer referring to a valid subject number contained within
-        the study.
+        """ Assumes base_dir is string containing directory with all subject 
+        files and num is an integer referring to a valid subject number 
+        contained within the study.
         Will gather the STAI survey data.
         1 = Not at all, 2 = Somewhat, 3 = Moderately so, 4 = Very much so
         """
@@ -83,9 +83,9 @@ class Person(object):
         return stai
 
     def _getSAM(self):
-        """ Assumes base_dir is string containing directory with all subject files
-        and num is an integer referring to a valid subject number contained within
-        the study.
+        """ Assumes base_dir is string containing directory with all subject 
+        files and num is an integer referring to a valid subject number
+        contained within the study.
         Will gather the SAM survey data.
         Scale 1-9
         """
@@ -101,11 +101,12 @@ class Person(object):
         return sam
 
     def _getSSSQ(self):
-        """ Assumes base_dir is string containing directory with all subject files
-        and num is an integer referring to a valid subject number contained within
-        the study.
+        """ Assumes base_dir is string containing directory with all subject 
+        files and num is an integer referring to a valid subject number
+        contained within the study.
         Will gather the SSSQ survey data.
-        1 = Not at all, 2 = A little bit, 3 = Somewhat, 4 = Very much, 5 = Extremely
+        1 = Not at all, 2 = A little bit, 3 = Somewhat, 4 = Very much,
+        5 = Extremely
         - I was committed to attaining my performance goals
         - I wanted to succeed on the task
         - I was motivated to do the task
@@ -175,6 +176,7 @@ class Person(object):
         using the calculations described in the README """
 
         # clean up rows with zero values for temp
+        # TODO: remove rows with any zero reading
         respi = respi.loc[respi['TEMP'] != 0].copy()
 
         vcc = 3
