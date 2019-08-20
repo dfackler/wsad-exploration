@@ -64,8 +64,8 @@ class Person(object):
         return panas
 
     def _getSTAI(self):
-        """ Assumes base_dir is string containing directory with all subject 
-        files and num is an integer referring to a valid subject number 
+        """ Assumes base_dir is string containing directory with all subject
+        files and num is an integer referring to a valid subject number
         contained within the study.
         Will gather the STAI survey data.
         1 = Not at all, 2 = Somewhat, 3 = Moderately so, 4 = Very much so
@@ -83,7 +83,7 @@ class Person(object):
         return stai
 
     def _getSAM(self):
-        """ Assumes base_dir is string containing directory with all subject 
+        """ Assumes base_dir is string containing directory with all subject
         files and num is an integer referring to a valid subject number
         contained within the study.
         Will gather the SAM survey data.
@@ -101,7 +101,7 @@ class Person(object):
         return sam
 
     def _getSSSQ(self):
-        """ Assumes base_dir is string containing directory with all subject 
+        """ Assumes base_dir is string containing directory with all subject
         files and num is an integer referring to a valid subject number
         contained within the study.
         Will gather the SSSQ survey data.
@@ -198,6 +198,7 @@ class Person(object):
                                      ))
         respi.drop('vout', axis='columns', inplace=True)
         respi.drop('rntc', axis='columns', inplace=True)
+        # TODO: change this to list like pkl file
         respi['ACC_X'] = respi['ACC_X'].apply(
             lambda x: (x-cmin)/(cmax-cmin)*2-1)
         respi['ACC_Y'] = respi['ACC_Y'].apply(
@@ -207,7 +208,26 @@ class Person(object):
         respi['RESPIRATION'] = respi['RESPIRATION'].apply(
             lambda x: (x/chan_bit-0.5)*100)
 
+        # Add time (at 770 Hz each row is 1/770 of a second)
+        # NOTE: Person2 has less minutes here than max of timings data frame
+        respi['seconds'] = respi['nSeq'].apply(lambda x: x*(1/770))
+        respi['minutes'] = respi['seconds'].apply(lambda x: x/60)
+
         return respi
+
+    def bucketRespi(self, bucket_size):
+        """ this will bucket rows and retrieve average for each metric
+        within the buckets """
+        respi_bucket = respi.copy()
+        respi_bucket['buckets'] = pd.cut(
+            respi_bucket['nSeq'], 91, labels=False)
+        respi_avgs = []
+        for i in range(91):
+            respi_avgs.append(respi_bucket[respi_bucket.buckets == i].mean(0))
+
+    def plotRespiMetric(self, metric, sample_perc):
+        """ this will plot a single metric with a specified sample_perc
+        to avoid plotting all data points """
 
     def getTiming(self):
         return self.timing
