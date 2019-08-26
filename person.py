@@ -3,6 +3,7 @@ import pandas as pd
 import os
 import ast
 import math
+from matplotlib import pylab
 
 base_dir = '/Users/david/Desktop/WESAD'
 
@@ -215,19 +216,27 @@ class Person(object):
 
         return respi
 
-    def bucketRespi(self, bucket_size):
+    def bucketRespi(self, num_buckets):
         """ this will bucket rows and retrieve average for each metric
         within the buckets """
         respi_bucket = respi.copy()
         respi_bucket['buckets'] = pd.cut(
-            respi_bucket['nSeq'], 91, labels=False)
+            respi_bucket['nSeq'], num_buckets, labels=False)
         respi_avgs = []
-        for i in range(91):
+        for i in range(num_buckets):
             respi_avgs.append(respi_bucket[respi_bucket.buckets == i].mean(0))
+        return respi_avgs
 
-    def plotRespiMetric(self, metric, sample_perc):
+    def plotRespiMetric(self, metric, num_buckets):
         """ this will plot a single metric with a specified sample_perc
-        to avoid plotting all data points """
+        to avoid plotting all data points.
+        Assumes valid metric label """
+        respi_avgs = self.bucketRespi(num_buckets)
+        graph_data = []
+        for i in range(len(respi_avgs)):
+            graph_data.append(respi_avgs[i][metric])
+        pylab.plot(graph_data, 'b-')
+        return None
 
     def getTiming(self):
         return self.timing
