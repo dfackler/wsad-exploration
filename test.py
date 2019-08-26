@@ -39,8 +39,8 @@ class TestPersonMethods(unittest.TestCase):
 
         """NOTE: these are min and max for reader but data has
         not been cleaned in script to make this abide """
-        #self.assertGreater(respi_df['TEMP'].min(), 0)
-        #self.assertLess(respi_df['TEMP'].max(), 50)
+        # self.assertGreater(respi_df['TEMP'].min(), 0)
+        # self.assertLess(respi_df['TEMP'].max(), 50)
 
 
 if __name__ == '__main__':

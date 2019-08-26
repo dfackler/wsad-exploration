@@ -199,13 +199,15 @@ class Person(object):
                                      ))
         respi.drop('vout', axis='columns', inplace=True)
         respi.drop('rntc', axis='columns', inplace=True)
-        # TODO: change this to list like pkl file
         respi['ACC_X'] = respi['ACC_X'].apply(
             lambda x: (x-cmin)/(cmax-cmin)*2-1)
         respi['ACC_Y'] = respi['ACC_Y'].apply(
             lambda x: (x-cmin)/(cmax-cmin)*2-1)
         respi['ACC_Z'] = respi['ACC_Z'].apply(
             lambda x: (x-cmin)/(cmax-cmin)*2-1)
+        respi['ACC'] = respi[['ACC_X', 'ACC_Y', 'ACC_Z']].apply(
+            lambda x: [x], axis=1)
+        respi = respi.drop(['ACC_X', 'ACC_Y', 'ACC_Z'], axis=1)
         respi['RESPIRATION'] = respi['RESPIRATION'].apply(
             lambda x: (x/chan_bit-0.5)*100)
 
