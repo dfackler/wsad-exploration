@@ -240,18 +240,19 @@ class Person(object):
         pylab.plot(graph_data, 'b-')
         return None
 
+    def _running_mean(self, x, n):
+        """ This implementation will return an array of the running mean
+        with length of len(x)-N+1 """
+        # https://stackoverflow.com/questions/13728392/moving-
+        # average-or-running-mean
+        return pd.Series(x).rolling(window=n).mean().iloc[n-1:].values
+
     def addFilter(self, metric, size):
         """ this will add a moving-average filter for a specified
         valid metric label in respi for the given window size
         (actual filter size is size*2+1)
         """
-        # initialize filter with zeros
-        n = len(self.respi[metric])
-        filtsig = np.zeros(n)
-
-        for i in range(size+1, n-size-1):
-            filtsig[i] = np.mean(self.respi[metric][i-size:i+size])
-
+        filtsig = self._running_mean(self.respi[metric], size)
         return filtsig
 
     def getTiming(self):
