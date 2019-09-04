@@ -3,7 +3,7 @@ import pandas as pd
 import os
 import ast
 import math
-from matplotlib import pylab
+import matplotlib.pyplot as plt
 import numpy as np
 
 base_dir = '/Users/david/Desktop/WESAD'
@@ -222,8 +222,9 @@ class Person(object):
     def bucketRespi(self, num_buckets, metric):
         """ this will bucket rows and retrieve average for each metric
         within the buckets """
+        respi_bucket = respi.copy()
         respi_bucket['buckets'] = pd.cut(
-            respi[metric], num_buckets, labels=False)
+            respi_bucket[metric], num_buckets, labels=False)
         respi_avgs = []
         for i in range(num_buckets):
             respi_avgs.append(respi_bucket[respi_bucket.buckets == i].mean(0))
@@ -233,11 +234,11 @@ class Person(object):
         """ this will plot a single metric with a specified sample_perc
         to avoid plotting all data points.
         Assumes valid metric label """
-        respi_avgs = self.bucketRespi(num_buckets)
+        respi_avgs = self.bucketRespi(num_buckets, metric)
         graph_data = []
         for i in range(len(respi_avgs)):
             graph_data.append(respi_avgs[i][metric])
-        pylab.plot(graph_data, 'b-')
+        plt.plot(graph_data, 'b-')
         return None
 
     def _running_mean(self, x, n):
