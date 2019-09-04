@@ -221,9 +221,8 @@ class Person(object):
     def bucketRespi(self, num_buckets):
         """ this will bucket rows and retrieve average for each metric
         within the buckets """
-        respi_bucket = respi.copy()
         respi_bucket['buckets'] = pd.cut(
-            respi_bucket['nSeq'], num_buckets, labels=False)
+            respi['nSeq'], num_buckets, labels=False)
         respi_avgs = []
         for i in range(num_buckets):
             respi_avgs.append(respi_bucket[respi_bucket.buckets == i].mean(0))
