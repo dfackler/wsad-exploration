@@ -4,6 +4,7 @@ import os
 import ast
 import math
 from matplotlib import pylab
+import numpy as np
 
 base_dir = '/Users/david/Desktop/WESAD'
 
@@ -218,11 +219,11 @@ class Person(object):
 
         return respi
 
-    def bucketRespi(self, num_buckets):
+    def bucketRespi(self, num_buckets, metric):
         """ this will bucket rows and retrieve average for each metric
         within the buckets """
         respi_bucket['buckets'] = pd.cut(
-            respi['nSeq'], num_buckets, labels=False)
+            respi[metric], num_buckets, labels=False)
         respi_avgs = []
         for i in range(num_buckets):
             respi_avgs.append(respi_bucket[respi_bucket.buckets == i].mean(0))
@@ -238,6 +239,20 @@ class Person(object):
             graph_data.append(respi_avgs[i][metric])
         pylab.plot(graph_data, 'b-')
         return None
+
+    def addFilter(self, metric, size):
+        """ this will add a moving-average filter for a specified
+        valid metric label in respi for the given window size
+        (actual filter size is size*2+1)
+        """
+        # initialize filter with zeros
+        n = len(self.respi[metric])
+        filtsig = np.zeros(n)
+
+        for i in range(size+1, n-size-1):
+            filtsig[i] = np.mean(self.respi[metric][i-size:i+size])
+
+        return filtsig
 
     def getTiming(self):
         return self.timing
