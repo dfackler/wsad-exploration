@@ -5,6 +5,7 @@ import ast
 import math
 import matplotlib.pyplot as plt
 import numpy as np
+import copy
 
 base_dir = '/Users/david/Desktop/WESAD'
 
@@ -248,12 +249,37 @@ class Person(object):
         # average-or-running-mean
         return pd.Series(x).rolling(window=n).mean().iloc[n-1:].values
 
-    def addFilter(self, metric, size):
+    def _gaussian_filter(self, x, n, fwhm):
+        """ This will create a gaussian filter over n points
+        with full-width half-max as the key parameter
+        """
+        # normalized time vector
+        # 770 is sample rate of chest signals
+        gtime = 1000*np.arange(-n, n)/770
+        # create gaussian window
+        gauswin = np.exp(-(4*np.log(2)*gtime**2)/fwhm**2)
+        # normalize to signal energy
+        gauswin = gauswin / np.sum(gauswin)
+
+        filtsig = copy.deepcopy(x)
+        for i in range(n+1, len(x)-n-1):
+            filtsig[i] = np.sum(x[i-n:i+n]*gauswin)
+        return filtsig
+
+    def addFilter(self, metric, size, style):
         """ this will add a moving-average filter for a specified
         valid metric label in respi for the given window size
         (actual filter size is size*2+1)
+        style can be either 'gaussian' or 'mean', default is mean
         """
-        filtsig = self._running_mean(self.respi[metric], size)
+        """if (style=='gaussian') and (style != 'mean'):
+            except ValueError:
+                print("Invalid style entered.")
+                return(None)"""
+        if style == 'gaussian':
+            filtsig = self._gaussian_filter(self.respi[metric], size, 100)
+        else:
+            filtsig = self._running_mean(self.respi[metric], size)
         return filtsig
 
     def getTiming(self):
