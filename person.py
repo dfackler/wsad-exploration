@@ -262,11 +262,12 @@ class Person(object):
 
         return respi
 
-    def plotRespiMetric(self, metric, n):
+    def plotRespiMetric(self, metric):
         """ this will plot a single metric with a mean filter applied.
         Assumes valid metric label """
-        respi_metric_filtered = self._running_mean(self.respi[metric], n)
-        plt.plot(respi_metric_filtered, 'b-')
+        # respi_metric_filtered = self._running_mean(self.respi[metric], n)
+        # plt.plot(respi_metric_filtered, 'b-')
+        plt.plot(self.respi[metric].values, 'b-')
         return None
 
     def _running_mean(self, x, n):
@@ -308,6 +309,17 @@ class Person(object):
         else:
             filtsig = self._running_mean(self.respi[metric], size)
         return filtsig
+
+    def _TKEO_denoise(self, metric):
+        """
+        Meant for EMG denoising. Will apply TKEO to convert signal to
+        total energy.
+        """
+        metric_orig = self.respi[metric].values
+        metric_copy = copy.deepcopy(metric_orig)
+        metric_copy[1:-1] = metric_orig[1:-1]**2 -\
+            metric_orig[0:-2]*metric_orig[2:]
+        return metric_copy
 
     def getTiming(self):
         return self.timing
